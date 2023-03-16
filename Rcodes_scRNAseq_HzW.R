@@ -1,4 +1,5 @@
 pp.seurat <- function(obj) {
+  
   #singel_cells
   #@ preprocess a seurat object: Calculate the percentage of mito and filter cells
   #@ this will be used after perforing some basic EDA on seurat object and before integration
@@ -8,14 +9,16 @@ pp.seurat <- function(obj) {
   if (!inherits(obj, "Seurat")) {
     stop("obj must be a Seurat object!")
   }
+
   cat("\nStart to calculate the percenage of mitochondria........\n")
-  obj[["percent.mt"]] <- PercentageFeatureSet(obj, pattern = "^MT")
+  obj[["percent.mt"]] <- Seurat::PercentageFeatureSet(obj, pattern = "^MT")
   
   cat("\nStart to filter cells........\n")
   obj <-  subset(x = obj, 
         subset = nFeature_RNA > 200 & nFeature_RNA < 7500 & percent.mt < 12)
+        
   cat("\nStart to normalize data with SCTtransform........\n")
-  obj <-SCTransform(obj, method = "glmGamPoi", 
+  obj <- Seurat::SCTransform(obj, method = "glmGamPoi", 
                     vars.to.regress = "percent.mt", verbose = FALSE)
   
   # cat("Start to regress out cell cycle genes........")
@@ -38,12 +41,13 @@ tl.run_seurat <- function(obj) {
     if (!inherits(obj, "Seurat")) {
       stop("obj must be a Seurat object!")
     }
-  obj1 <- 
-    obj %>% 
-    RunPCA() %>% 
-    FindNeighbors(dims=1:30) %>% 
-    RunUMAP(dims=1:30) %>% 
-    FindClusters()
+  obj1 <- obj %>% 
+    Seurat::RunPCA() %>% 
+    Seurat::FindNeighbors(dims=1:30) %>% 
+    Seurat::RunUMAP(dims=1:30) %>% 
+    Seurat::FindClusters()
+
+  return(obj1)
 } 
 
 tl.run_monocle3 <- function(seurat_obj) {
@@ -72,11 +76,13 @@ tl.intergrate_obj_lst  <- function(seu_obj_lst) {
 
   #@ Return: an integrated seurat object
   
-  features <- SelectIntegrationFeatures(seu_obj_lst, nfeatures = 3000) 
-  combined <- PrepSCTIntegration(seu_obj_lst, anchor.features = features) %>% 
-    FindIntegrationAnchors( dims = 1:20, normalization.method = "SCT", 
-                            anchor.features = features)  %>% 
-    IntegrateData(normalization.method = "SCT", verbose = FALSE)
+  features <- Seurat::SelectIntegrationFeatures(seu_obj_lst, nfeatures = 3000) 
+  combined <- Seurat::PrepSCTIntegration(seu_obj_lst, 
+                                         anchor.features = features) %>% 
+    Seurat::FindIntegrationAnchors( dims = 1:20, 
+                                    normalization.method = "SCT", 
+                                    anchor.features = features)  %>% 
+    Seurat::IntegrateData(normalization.method = "SCT", verbose = FALSE)
   
   return(combined)
 }
