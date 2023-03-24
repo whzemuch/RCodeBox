@@ -1,4 +1,6 @@
 df_to_workbook <- function(file_name, data, have_rownames=TRUE) {
+  library(openxlsx)
+  library(purrr)
   # save multiple data frame to a single excel spreadsheet
   #@ file_name: string, the name of the excel file
   #@ data: a named vector or list. name is the worksheet name,
